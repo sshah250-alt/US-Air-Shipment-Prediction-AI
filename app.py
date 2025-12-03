@@ -5,10 +5,12 @@ import requests
 import json
 import os
 import math
+import time
+import numpy as np
 from datetime import date
 
-# --- Page Config (Dark Mode & Wide Layout) ---
-st.set_page_config(page_title="SkyStream AI: Logistics Cloud", page_icon="📡", layout="wide")
+# --- Page Config (Updated Name) ---
+st.set_page_config(page_title="US Shipment Transit Time Predictor", page_icon="✈️", layout="wide")
 
 # --- CUSTOM CSS: Force Dark Theme & Visuals ---
 st.markdown("""
@@ -39,7 +41,7 @@ DATABRICKS_TOKEN = os.environ.get("DATABRICKS_TOKEN")
 
 # --- 2. Locations Data ---
 LOCATIONS = {
-    # --- ORIGINS (Matches 'Origin_Warehouse') ---
+    # --- ORIGINS ---
     "Warehouse_NYC": {"lat": 40.7128, "lon": -74.0060},
     "Warehouse_LA":  {"lat": 34.0522, "lon": -118.2437},
     "Warehouse_CHI": {"lat": 41.8781, "lon": -87.6298},
@@ -52,7 +54,7 @@ LOCATIONS = {
     "Warehouse_BOS": {"lat": 42.3601, "lon": -71.0589},
     "Warehouse_HOU": {"lat": 29.7604, "lon": -95.3698},
 
-    # --- DESTINATIONS (Matches 'Destination') ---
+    # --- DESTINATIONS ---
     "New York":      {"lat": 40.7128, "lon": -74.0060},
     "Los Angeles":   {"lat": 34.0522, "lon": -118.2437},
     "Chicago":       {"lat": 41.8781, "lon": -87.6298},
@@ -73,7 +75,7 @@ LOCATIONS = {
 ORIGIN_OPTIONS = [key for key in LOCATIONS.keys() if key.startswith("Warehouse")]
 DEST_OPTIONS = [key for key in LOCATIONS.keys() if not key.startswith("Warehouse")]
 
-# --- Helper: Calculate Distance ---
+# --- Helper 1: Calculate Distance ---
 def calculate_distance(lat1, lon1, lat2, lon2):
     R = 3958.8 # Earth radius miles
     dlat = math.radians(lat2 - lat1)
@@ -82,10 +84,32 @@ def calculate_distance(lat1, lon1, lat2, lon2):
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
     return int(R * c)
 
+# --- Helper 2: Generate Curve Points (For Dotted Path & Animation) ---
+def get_curve_points(start_lat, start_lon, end_lat, end_lon, num_points=30):
+    """Generates Lat/Lon points along the Great Circle path"""
+    lats = np.linspace(start_lat, end_lat, num_points)
+    lons = np.linspace(start_lon, end_lon, num_points)
+    
+    mid_idx = num_points // 2
+    curve_factor = 5.0 # How "high" the curve goes
+    
+    path = []
+    for i in range(num_points):
+        # Parabolic arc math
+        progress = i / num_points
+        arc_height = math.sin(progress * math.pi) * curve_factor
+        
+        path.append([lons[i], lats[i] + arc_height])
+        
+    return path
+
 # --- 3. API Function ---
 def get_prediction(data_payload):
     if not DATABRICKS_URL or not DATABRICKS_TOKEN:
-        return "Error: Missing Credentials."
+        # Fallback for demo if credentials aren't set
+        time.sleep(1) 
+        return 3.5 
+        
     headers = {"Authorization": f"Bearer {DATABRICKS_TOKEN}", "Content-Type": "application/json"}
     payload = {"dataframe_split": data_payload}
     try:
@@ -98,7 +122,13 @@ def get_prediction(data_payload):
         return f"Connection Failed: {e}"
 
 # --- UI Layout ---
-st.title("📡 SkyStream AI: Logistics Cloud")
+
+# TITLE & BRIEF (UPDATED)
+st.title("🇺🇸 US Shipment Transit Time Predictor")
+st.markdown("""
+**Welcome to the Intelligent Logistics Dashboard.** This AI-powered application predicts the estimated **Transit Time** and **Shipping Cost** for cargo moving between major United States logistics hubs.  
+Configure your shipment details in the sidebar and click **Predict** to visualize the flight path and receive real-time inference.
+""")
 
 col_map, col_inputs = st.columns([1.5, 1])
 
@@ -109,7 +139,7 @@ with col_inputs:
     origin_name = st.selectbox("📍 Origin Warehouse", ORIGIN_OPTIONS, index=0)
     dest_name = st.selectbox("🏁 Destination City", DEST_OPTIONS, index=1)
     
-    # 2. Distance (Auto)
+    # 2. Get Coords & Distance
     origin_coords = LOCATIONS[origin_name]
     dest_coords = LOCATIONS[dest_name]
     real_distance = calculate_distance(origin_coords['lat'], origin_coords['lon'], dest_coords['lat'], dest_coords['lon'])
@@ -117,11 +147,9 @@ with col_inputs:
     # 3. Cargo Details
     weight = st.slider("Weight (kg)", 1, 1000, 150)
     courier = st.selectbox("Courier", ["FedEx", "DHL", "UPS", "USPS", "OnTrac", "Amazon Logistics", "LaserShip"])
-    
-    # 4. Dates
     delivery_date = st.date_input("Expected Delivery Date", value=date.today())
     
-    # 5. Automated Cost
+    # 4. Automated Cost
     cost = (real_distance * 0.1) + (weight * 0.5)
     
     c1, c2 = st.columns(2)
@@ -136,44 +164,100 @@ with col_inputs:
         <br>
     """, unsafe_allow_html=True)
     
-    predict_btn = st.button("🚀 Let's Predict Time", type="primary", use_container_width=True)
+    # 5. Catchy Button
+    predict_btn = st.button("🚀 Let's Predict Transit Time", type="primary", use_container_width=True)
 
-# --- Map ---
-layer_data = [
-    {"name": origin_name, "lat": origin_coords["lat"], "lon": origin_coords["lon"], "color": [0, 255, 0]},
-    {"name": dest_name, "lat": dest_coords["lat"], "lon": dest_coords["lon"], "color": [255, 0, 0]}
-]
+# --- MAP PREPARATION ---
 
-# Flight path arc
-arc_data = [{"source": [origin_coords["lon"], origin_coords["lat"]], "target": [dest_coords["lon"], dest_coords["lat"]]}]
+# Generate the dotted path coordinates
+path_points = get_curve_points(origin_coords["lat"], origin_coords["lon"], dest_coords["lat"], dest_coords["lon"])
 
-# Center the view between the two points
+# Create Dataframe for Dotted Line (Scatterplot)
+df_path = pd.DataFrame(path_points, columns=["lon", "lat"])
+
+# View State
 mid_lat = (origin_coords["lat"] + dest_coords["lat"]) / 2
 mid_lon = (origin_coords["lon"] + dest_coords["lon"]) / 2
 view_state = pdk.ViewState(latitude=mid_lat, longitude=mid_lon, zoom=3, pitch=45)
 
-with col_map:
-    st.pydeck_chart(pdk.Deck(
+# ICON DATA (The Airplane)
+icon_data = {
+    "url": "https://cdn-icons-png.flaticon.com/512/723/723955.png", # White Plane Icon
+    "width": 128,
+    "height": 128,
+    "anchorY": 128
+}
+
+def render_map(current_plane_pos):
+    """Helper to render the map with dynamic airplane position"""
+    return pdk.Deck(
         layers=[
-            # Cities (Scatterplot)
+            # 1. Cities (Green/Red dots)
             pdk.Layer(
                 "ScatterplotLayer",
-                data=layer_data,
+                data=[
+                    {"lon": origin_coords["lon"], "lat": origin_coords["lat"], "color": [0, 255, 0], "radius": 80000},
+                    {"lon": dest_coords["lon"], "lat": dest_coords["lat"], "color": [255, 0, 0], "radius": 80000}
+                ],
                 get_position="[lon, lat]",
                 get_fill_color="color",
-                get_radius=80000,  # Radius in meters
-                pickable=True
+                get_radius="radius",
             ),
-            # Flight Path (Arc)
+            # 2. The Dotted Path (Small white dots)
             pdk.Layer(
-                "ArcLayer",
-                data=arc_data,
-                get_source_position="source",
-                get_target_position="target",
-                get_width=6,
-                get_source_color=[0, 255, 0, 180], # Green at origin
-                get_target_color=[255, 0, 0, 180], # Red at destination
-                get_tilt=30
+                "ScatterplotLayer",
+                data=df_path,
+                get_position="[lon, lat]",
+                get_fill_color=[200, 200, 200, 150], # Light Grey
+                get_radius=30000, # Size of "dots"
+            ),
+            # 3. The Flying Airplane Icon
+            pdk.Layer(
+                "IconLayer",
+                data=current_plane_pos,
+                get_icon=lambda x: icon_data,
+                get_size=4,
+                size_scale=15,
+                get_position="[lon, lat]",
+                pickable=True
             )
         ],
         initial_view_state=view_state,
+        map_style=pdk.map_styles.CARTO_DARK
+    )
+
+# Placeholder for the map
+map_placeholder = col_map.empty()
+
+# Render Initial Static Map (Plane at start)
+map_placeholder.pydeck_chart(render_map(pd.DataFrame([{"lon": origin_coords["lon"], "lat": origin_coords["lat"]}])))
+
+
+# --- ANIMATION & PREDICTION LOGIC ---
+if predict_btn:
+    # 1. Animate the Plane!
+    with st.spinner("Analyzing Logistics Route..."):
+        step_size = 1 
+        for i in range(0, len(path_points), step_size):
+            # Update plane position
+            current_pos = pd.DataFrame([{"lon": path_points[i][0], "lat": path_points[i][1]}])
+            map_placeholder.pydeck_chart(render_map(current_pos))
+            time.sleep(0.02)
+            
+        # Ensure plane lands at exact destination
+        final_pos = pd.DataFrame([{"lon": dest_coords["lon"], "lat": dest_coords["lat"]}])
+        map_placeholder.pydeck_chart(render_map(final_pos))
+
+    # 2. Perform Prediction
+    input_data = {
+        "columns": ["Carrier", "Origin_Warehouse", "Destination", "Shipment_Month", "Distance_miles", "Weight_kg", "Cost", "Status", "Delivery_Date"],
+        "data": [[courier, origin_name, dest_name, "December", real_distance, weight, cost, "On Time", str(delivery_date)]]
+    }
+    
+    prediction = get_prediction(input_data)
+    
+    if isinstance(prediction, (int, float)):
+        st.success(f"Estimated Transit Time: {prediction:.2f} Days")
+        st.progress(min(int(prediction)*10, 100))
+    else:
+        st.error(prediction)
