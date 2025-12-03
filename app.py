@@ -8,14 +8,21 @@ import math
 import time
 import numpy as np
 from datetime import date
+import datetime
 
-# --- Page Config (Updated Name) ---
-st.set_page_config(page_title="US Shipment Transit Time Predictor", page_icon="✈️", layout="wide")
+# ==========================================
+# 1. CONFIGURATION & STYLING
+# ==========================================
+st.set_page_config(
+    page_title="US Shipment Transit Time Predictor", 
+    page_icon="✈️", 
+    layout="wide"
+)
 
-# --- CUSTOM CSS: Force Dark Theme & Visuals ---
+# Force Dark Theme & Custom CSS
 st.markdown("""
     <style>
-    /* Main Background */
+    /* Main Background - Dark */
     .stApp {
         background-color: #0E1117;
         color: white;
@@ -24,9 +31,14 @@ st.markdown("""
     [data-testid="stSidebar"] {
         background-color: #262730;
     }
-    /* Dropdowns and Inputs */
-    .stSelectbox, .stSlider, .stDateInput {
+    /* Inputs (Dropdowns, Sliders, DatePickers) text color */
+    .stSelectbox, .stSlider, .stDateInput, div[data-baseweb="select"] {
         color: white;
+    }
+    /* Metrics Styling */
+    [data-testid="stMetricValue"] {
+        font-size: 24px;
+        color: #00FF00; /* Bright Green for numbers */
     }
     /* Success/Error Message Text */
     .stAlert {
@@ -35,11 +47,15 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# --- 1. Secure Connection Setup ---
+# ==========================================
+# 2. CREDENTIALS & DATA SETUP
+# ==========================================
+
+# Retrieves secrets from environment variables
 DATABRICKS_URL = os.environ.get("DATABRICKS_URL")
 DATABRICKS_TOKEN = os.environ.get("DATABRICKS_TOKEN")
 
-# --- 2. Locations Data ---
+# Coordinate Dictionary
 LOCATIONS = {
     # --- ORIGINS ---
     "Warehouse_NYC": {"lat": 40.7128, "lon": -74.0060},
@@ -75,8 +91,12 @@ LOCATIONS = {
 ORIGIN_OPTIONS = [key for key in LOCATIONS.keys() if key.startswith("Warehouse")]
 DEST_OPTIONS = [key for key in LOCATIONS.keys() if not key.startswith("Warehouse")]
 
-# --- Helper 1: Calculate Distance ---
+# ==========================================
+# 3. HELPER FUNCTIONS
+# ==========================================
+
 def calculate_distance(lat1, lon1, lat2, lon2):
+    """Calculates approximate distance in miles (Haversine formula)."""
     R = 3958.8 # Earth radius miles
     dlat = math.radians(lat2 - lat1)
     dlon = math.radians(lon2 - lon1)
@@ -84,46 +104,51 @@ def calculate_distance(lat1, lon1, lat2, lon2):
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
     return int(R * c)
 
-# --- Helper 2: Generate Curve Points (For Dotted Path & Animation) ---
 def get_curve_points(start_lat, start_lon, end_lat, end_lon, num_points=30):
-    """Generates Lat/Lon points along the Great Circle path"""
+    """Generates Lat/Lon points along a curved path for the map."""
     lats = np.linspace(start_lat, end_lat, num_points)
     lons = np.linspace(start_lon, end_lon, num_points)
     
-    mid_idx = num_points // 2
-    curve_factor = 5.0 # How "high" the curve goes
-    
+    curve_factor = 5.0 # Height of the arc
     path = []
     for i in range(num_points):
-        # Parabolic arc math
         progress = i / num_points
         arc_height = math.sin(progress * math.pi) * curve_factor
-        
         path.append([lons[i], lats[i] + arc_height])
         
     return path
 
-# --- 3. API Function ---
 def get_prediction(data_payload):
+    """Sends payload to Databricks Serving Endpoint."""
     if not DATABRICKS_URL or not DATABRICKS_TOKEN:
-        # Fallback for demo if credentials aren't set
-        time.sleep(1) 
-        return 3.5 
+        return "Error: Credentials missing. Set DATABRICKS_URL and DATABRICKS_TOKEN."
         
-    headers = {"Authorization": f"Bearer {DATABRICKS_TOKEN}", "Content-Type": "application/json"}
+    headers = {
+        "Authorization": f"Bearer {DATABRICKS_TOKEN}", 
+        "Content-Type": "application/json"
+    }
+    
+    # Databricks expects specific JSON structure
     payload = {"dataframe_split": data_payload}
+    
     try:
         response = requests.post(DATABRICKS_URL, headers=headers, data=json.dumps(payload))
         if response.status_code == 200:
-            return response.json()['predictions'][0]
+            result = response.json()
+            if 'predictions' in result:
+                return float(result['predictions'][0])
+            else:
+                return f"Unexpected API format: {result}"
         else:
-            return f"Error {response.status_code}: {response.text}"
+            return f"API Error {response.status_code}: {response.text}"
     except Exception as e:
         return f"Connection Failed: {e}"
 
-# --- UI Layout ---
 
-# TITLE & BRIEF (UPDATED)
+# ==========================================
+# 4. UI LAYOUT & MAP
+# ==========================================
+
 st.title("🇺🇸 US Shipment Transit Time Predictor")
 st.markdown("""
 **Welcome to the Intelligent Logistics Dashboard.** This AI-powered application predicts the estimated **Transit Time** and **Shipping Cost** for cargo moving between major United States logistics hubs.  
@@ -135,28 +160,28 @@ col_map, col_inputs = st.columns([1.5, 1])
 with col_inputs:
     st.subheader("📦 Configure Shipment")
     
-    # 1. Routes
+    # Inputs
     origin_name = st.selectbox("📍 Origin Warehouse", ORIGIN_OPTIONS, index=0)
     dest_name = st.selectbox("🏁 Destination City", DEST_OPTIONS, index=1)
     
-    # 2. Get Coords & Distance
+    # Calculations
     origin_coords = LOCATIONS[origin_name]
     dest_coords = LOCATIONS[dest_name]
     real_distance = calculate_distance(origin_coords['lat'], origin_coords['lon'], dest_coords['lat'], dest_coords['lon'])
     
-    # 3. Cargo Details
     weight = st.slider("Weight (kg)", 1, 1000, 150)
     courier = st.selectbox("Courier", ["FedEx", "DHL", "UPS", "USPS", "OnTrac", "Amazon Logistics", "LaserShip"])
     delivery_date = st.date_input("Expected Delivery Date", value=date.today())
     
-    # 4. Automated Cost
+    # Rough cost estimate logic
     cost = (real_distance * 0.1) + (weight * 0.5)
     
+    # Display Stats
     c1, c2 = st.columns(2)
     c1.metric("Distance", f"{real_distance} mi")
     c2.metric("Est. Cost", f"${cost:.2f}")
 
-    # Visual Box
+    # Visual Summary Box
     st.markdown(f"""
         <div style="height:80px; background:#262730; border:2px dashed #4CAF50; border-radius:10px; display:flex; justify-content:center; align-items:center;">
             <b style="font-size:20px; color:white;">📦 {weight} kg | {delivery_date}</b>
@@ -164,35 +189,31 @@ with col_inputs:
         <br>
     """, unsafe_allow_html=True)
     
-    # 5. Catchy Button
+    # ACTION BUTTON
     predict_btn = st.button("🚀 Let's Predict Transit Time", type="primary", use_container_width=True)
 
-# --- MAP PREPARATION ---
+# --- MAP VISUALIZATION SETUP ---
 
-# Generate the dotted path coordinates
+# 1. Generate Path
 path_points = get_curve_points(origin_coords["lat"], origin_coords["lon"], dest_coords["lat"], dest_coords["lon"])
-
-# Create Dataframe for Dotted Line (Scatterplot)
 df_path = pd.DataFrame(path_points, columns=["lon", "lat"])
 
-# View State
+# 2. View State (Centered)
 mid_lat = (origin_coords["lat"] + dest_coords["lat"]) / 2
 mid_lon = (origin_coords["lon"] + dest_coords["lon"]) / 2
 view_state = pdk.ViewState(latitude=mid_lat, longitude=mid_lon, zoom=3, pitch=45)
 
-# ICON DATA (The Airplane)
+# 3. Icon Data (Airplane)
 icon_data = {
     "url": "https://cdn-icons-png.flaticon.com/512/723/723955.png", # White Plane Icon
-    "width": 128,
-    "height": 128,
-    "anchorY": 128
+    "width": 128, "height": 128, "anchorY": 128
 }
 
 def render_map(current_plane_pos):
-    """Helper to render the map with dynamic airplane position"""
+    """Returns a PyDeck object with the static path + dynamic plane position."""
     return pdk.Deck(
         layers=[
-            # 1. Cities (Green/Red dots)
+            # A. Cities (Green/Red dots)
             pdk.Layer(
                 "ScatterplotLayer",
                 data=[
@@ -203,15 +224,15 @@ def render_map(current_plane_pos):
                 get_fill_color="color",
                 get_radius="radius",
             ),
-            # 2. The Dotted Path (Small white dots)
+            # B. The Dotted Path
             pdk.Layer(
                 "ScatterplotLayer",
                 data=df_path,
                 get_position="[lon, lat]",
-                get_fill_color=[200, 200, 200, 150], # Light Grey
-                get_radius=30000, # Size of "dots"
+                get_fill_color=[200, 200, 200, 150],
+                get_radius=30000,
             ),
-            # 3. The Flying Airplane Icon
+            # C. The Moving Airplane
             pdk.Layer(
                 "IconLayer",
                 data=current_plane_pos,
@@ -223,41 +244,84 @@ def render_map(current_plane_pos):
             )
         ],
         initial_view_state=view_state,
-        map_style=pdk.map_styles.CARTO_DARK
+        map_style=pdk.map_styles.CARTO_DARK # Crucial for Dark Mode visibility
     )
 
-# Placeholder for the map
+# Create a placeholder for the map to update inside
 map_placeholder = col_map.empty()
 
-# Render Initial Static Map (Plane at start)
-map_placeholder.pydeck_chart(render_map(pd.DataFrame([{"lon": origin_coords["lon"], "lat": origin_coords["lat"]}])))
+# Show initial map (plane at origin)
+initial_pos = pd.DataFrame([{"lon": origin_coords["lon"], "lat": origin_coords["lat"]}])
+map_placeholder.pydeck_chart(render_map(initial_pos))
 
 
-# --- ANIMATION & PREDICTION LOGIC ---
+# ==========================================
+# 5. PREDICTION LOGIC
+# ==========================================
+
 if predict_btn:
-    # 1. Animate the Plane!
+    
+    # A. Run Animation
     with st.spinner("Analyzing Logistics Route..."):
         step_size = 1 
+        # Loop through points to move the plane
         for i in range(0, len(path_points), step_size):
-            # Update plane position
             current_pos = pd.DataFrame([{"lon": path_points[i][0], "lat": path_points[i][1]}])
             map_placeholder.pydeck_chart(render_map(current_pos))
-            time.sleep(0.02)
+            time.sleep(0.02) # Speed of animation
             
         # Ensure plane lands at exact destination
         final_pos = pd.DataFrame([{"lon": dest_coords["lon"], "lat": dest_coords["lat"]}])
         map_placeholder.pydeck_chart(render_map(final_pos))
 
-    # 2. Perform Prediction
+    # B. Prepare Payload (MATCHING TRAINING SCHEMA)
+    # Note: 'Delivery_Date' is excluded because the training model dropped it.
     input_data = {
-        "columns": ["Carrier", "Origin_Warehouse", "Destination", "Shipment_Month", "Distance_miles", "Weight_kg", "Cost", "Status", "Delivery_Date"],
-        "data": [[courier, origin_name, dest_name, "December", real_distance, weight, cost, "On Time", str(delivery_date)]]
+        "columns": [
+            "Carrier", 
+            "Origin_Warehouse", 
+            "Destination", 
+            "Shipment_Month", 
+            "Distance_miles", 
+            "Weight_kg", 
+            "Cost", 
+            "Status" 
+        ],
+        "data": [[
+            courier, 
+            origin_name, 
+            dest_name, 
+            "December",      # Static for now (or derive from date)
+            real_distance, 
+            weight, 
+            cost, 
+            "On Time"        # Assuming 'Status' is required by model
+        ]]
     }
     
+    # C. Call API
     prediction = get_prediction(input_data)
     
+    # D. Display Results
     if isinstance(prediction, (int, float)):
-        st.success(f"Estimated Transit Time: {prediction:.2f} Days")
-        st.progress(min(int(prediction)*10, 100))
+        st.success("Prediction Complete!")
+        
+        predicted_days = float(prediction)
+        final_arrival = date.today() + datetime.timedelta(days=int(predicted_days))
+        
+        # Display Metrics prominently
+        m1, m2, m3, m4 = st.columns(4)
+        with m1:
+            st.metric(label="⏱️ Transit Time", value=f"{predicted_days:.1f} Days", delta="AI Predicted")
+        with m2:
+            st.metric(label="📅 Arrival Date", value=str(final_arrival))
+        with m3:
+            st.metric(label="💰 Est. Cost", value=f"${cost:.2f}")
+        with m4:
+            st.metric(label="✈️ Distance", value=f"{real_distance} mi")
+            
+        st.caption("Shipment Progress Probability")
+        st.progress(min(int(predicted_days)*10, 100))
+        
     else:
         st.error(prediction)
