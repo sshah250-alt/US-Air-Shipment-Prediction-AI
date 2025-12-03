@@ -5,6 +5,7 @@ import requests
 import json
 import os
 import math
+from datetime import date
 
 # --- Page Config ---
 st.set_page_config(page_title="SkyStream AI: Logistics Cloud", page_icon="📡", layout="wide")
@@ -15,7 +16,7 @@ DATABRICKS_TOKEN = os.environ.get("DATABRICKS_TOKEN")
 
 # --- 2. Locations Data ---
 LOCATIONS = {
-    # --- ORIGINS ---
+    # --- ORIGINS (Matches 'Origin_Warehouse') ---
     "Warehouse_NYC": {"lat": 40.7128, "lon": -74.0060},
     "Warehouse_LA":  {"lat": 34.0522, "lon": -118.2437},
     "Warehouse_CHI": {"lat": 41.8781, "lon": -87.6298},
@@ -28,7 +29,7 @@ LOCATIONS = {
     "Warehouse_BOS": {"lat": 42.3601, "lon": -71.0589},
     "Warehouse_HOU": {"lat": 29.7604, "lon": -95.3698},
 
-    # --- DESTINATIONS ---
+    # --- DESTINATIONS (Matches 'Destination') ---
     "New York":      {"lat": 40.7128, "lon": -74.0060},
     "Los Angeles":   {"lat": 34.0522, "lon": -118.2437},
     "Chicago":       {"lat": 41.8781, "lon": -87.6298},
@@ -49,9 +50,9 @@ LOCATIONS = {
 ORIGIN_OPTIONS = [key for key in LOCATIONS.keys() if key.startswith("Warehouse")]
 DEST_OPTIONS = [key for key in LOCATIONS.keys() if not key.startswith("Warehouse")]
 
-# --- Helper: Calculate Distance (Haversine Formula) ---
+# --- Helper: Calculate Distance ---
 def calculate_distance(lat1, lon1, lat2, lon2):
-    R = 3958.8 # Earth radius in miles
+    R = 3958.8 # Earth radius miles
     dlat = math.radians(lat2 - lat1)
     dlon = math.radians(lon2 - lon1)
     a = math.sin(dlat / 2)**2 + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlon / 2)**2
@@ -61,7 +62,7 @@ def calculate_distance(lat1, lon1, lat2, lon2):
 # --- 3. API Function ---
 def get_prediction(data_payload):
     if not DATABRICKS_URL or not DATABRICKS_TOKEN:
-        return "Error: Missing Credentials. Check Render Env Vars."
+        return "Error: Missing Credentials."
     headers = {"Authorization": f"Bearer {DATABRICKS_TOKEN}", "Content-Type": "application/json"}
     payload = {"dataframe_split": data_payload}
     try:
@@ -81,11 +82,11 @@ col_map, col_inputs = st.columns([1.5, 1])
 with col_inputs:
     st.subheader("📦 Configure Shipment")
     
-    # 1. Route Selection
+    # 1. Routes
     origin_name = st.selectbox("📍 Origin Warehouse", ORIGIN_OPTIONS, index=0)
     dest_name = st.selectbox("🏁 Destination City", DEST_OPTIONS, index=1)
     
-    # 2. Calculate Distance Automatically
+    # 2. Distance (Auto)
     origin_coords = LOCATIONS[origin_name]
     dest_coords = LOCATIONS[dest_name]
     real_distance = calculate_distance(origin_coords['lat'], origin_coords['lon'], dest_coords['lat'], dest_coords['lon'])
@@ -94,11 +95,13 @@ with col_inputs:
     weight = st.slider("Weight (kg)", 1, 1000, 150)
     courier = st.selectbox("Courier", ["FedEx", "DHL", "UPS", "USPS", "OnTrac", "Amazon Logistics", "LaserShip"])
     
-    # 4. Automated Cost Calculation (Hidden Logic)
-    # Formula: $0.10 per mile + $0.50 per kg
+    # 4. Dates (New Feature!)
+    # We let user pick Delivery Date. We default shipment date to "Today" internally for month calculation.
+    delivery_date = st.date_input("Expected Delivery Date", value=date.today())
+    
+    # 5. Automated Cost
     cost = (real_distance * 0.1) + (weight * 0.5)
     
-    # Display calculated metrics cleanly
     c1, c2 = st.columns(2)
     c1.metric("Distance", f"{real_distance} mi")
     c2.metric("Est. Cost", f"${cost:.2f}")
@@ -106,7 +109,7 @@ with col_inputs:
     # Visual Box
     st.markdown(f"""
         <div style="height:80px; background:#e0e0e0; border:2px dashed #999; border-radius:10px; display:flex; justify-content:center; align-items:center;">
-            <b style="font-size:20px; color:#333;">📦 {weight} kg | ${cost:.2f}</b>
+            <b style="font-size:20px; color:#333;">📦 {weight} kg | {delivery_date}</b>
         </div>
         <br>
     """, unsafe_allow_html=True)
@@ -134,7 +137,7 @@ with col_map:
 
 # --- Trigger Prediction ---
 if predict_btn:
-    # Prepare Data with ALL required columns (Cost and Distance are now computed)
+    # Prepare Data including Delivery_Date
     input_data = {
         "columns": [
             "Carrier", 
@@ -143,18 +146,20 @@ if predict_btn:
             "Shipment_Month", 
             "Distance_miles",     
             "Weight_kg",          
-            "Cost",               # Auto-Calculated
-            "Status"              
+            "Cost",
+            "Status",
+            "Delivery_Date"       # New Column
         ],
         "data": [[
             courier, 
             origin_name,   
             dest_name,     
-            "December",    
+            "December",           # Static month (or extract from delivery_date)
             real_distance, 
             weight, 
             cost,          
-            "On Time"      
+            "On Time",
+            str(delivery_date)    # Send as String (YYYY-MM-DD)
         ]]
     }
     
