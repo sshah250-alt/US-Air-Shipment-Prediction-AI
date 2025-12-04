@@ -151,7 +151,7 @@ def get_prediction(data_payload):
 
 st.title("🇺🇸 US Shipment Transit Time Predictor")
 st.markdown("""
-**Welcome to the Intelligent Logistics Dashboard.** This AI-powered application predicts the estimated **Transit Time** and **Shipping Cost** for cargo moving between major United States logistics hubs.  
+**Welcome to the Intelligent Logistics Dashboard.** This AI-powered application predicts the estimated **Transit Time** and for cargo moving between major United States logistics hubs.  
 Configure your shipment details in the sidebar and click **Predict** to visualize the flight path and receive real-time inference.
 """)
 
