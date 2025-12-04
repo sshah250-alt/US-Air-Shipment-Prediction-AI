@@ -37,8 +37,8 @@ st.markdown("""
     }
     /* Metrics Styling */
     [data-testid="stMetricValue"] {
-        font-size: 24px;
-        color: #00FF00; /* Bright Green for numbers */
+        font-size: 32px; /* Made slightly bigger for emphasis */
+        color: #00FF00; /* Bright Green */
     }
     /* Success/Error Message Text */
     .stAlert {
@@ -155,8 +155,7 @@ st.markdown("""
 Configure your shipment details in the sidebar and click **Predict** to visualize the flight path and receive real-time inference.
 """)
 
-# FIXED LINE: Added the closing brackets and parenthesis
-col_map, col_inputs = st.columns([1.5, 1]) 
+col_map, col_inputs = st.columns([1.5, 1])
 
 with col_inputs:
     st.subheader("📦 Configure Shipment")
@@ -172,12 +171,14 @@ with col_inputs:
     
     weight = st.slider("Weight (kg)", 1, 1000, 150)
     courier = st.selectbox("Courier", ["FedEx", "DHL", "UPS", "USPS", "OnTrac", "Amazon Logistics", "LaserShip"])
-    delivery_date = st.date_input("Expected Delivery Date", value=date.today())
     
-    # Rough cost estimate logic
+    # Date Input
+    delivery_date = st.date_input("Shipment Start Date", value=date.today())
+    
+    # Rough cost estimate logic (Kept for sidebar display, not result)
     cost = (real_distance * 0.1) + (weight * 0.5)
     
-    # Display Stats
+    # Display Stats (Sidebar/Top)
     c1, c2 = st.columns(2)
     c1.metric("Distance", f"{real_distance} mi")
     c2.metric("Est. Cost", f"${cost:.2f}")
@@ -275,7 +276,7 @@ if predict_btn:
         final_pos = pd.DataFrame([{"lon": dest_coords["lon"], "lat": dest_coords["lat"]}])
         map_placeholder.pydeck_chart(render_map(final_pos))
 
-    # B. Prepare Payload (FIXED: Added Delivery_Date)
+    # B. Prepare Payload
     input_data = {
         "columns": [
             "Carrier", 
@@ -286,7 +287,7 @@ if predict_btn:
             "Weight_kg", 
             "Cost", 
             "Status",
-            "Delivery_Date"  # <--- REQUIRED BY API
+            "Delivery_Date" 
         ],
         "data": [[
             courier, 
@@ -297,7 +298,7 @@ if predict_btn:
             weight, 
             cost, 
             "On Time",
-            str(delivery_date) # <--- REQUIRED BY API
+            str(delivery_date)
         ]]
     }
     
@@ -309,21 +310,16 @@ if predict_btn:
         st.success("Prediction Complete!")
         
         predicted_days = float(prediction)
-        final_arrival = date.today() + datetime.timedelta(days=int(predicted_days))
         
-        # Display Metrics prominently
-        m1, m2, m3, m4 = st.columns(4)
+        # Calculate Arrival Date: Selected Date + Predicted Days
+        final_arrival = delivery_date + datetime.timedelta(days=int(predicted_days))
+        
+        # --- RESULTS DISPLAY (SIMPLIFIED) ---
+        m1, m2 = st.columns(2)
         with m1:
             st.metric(label="⏱️ Transit Time", value=f"{predicted_days:.1f} Days", delta="AI Predicted")
         with m2:
             st.metric(label="📅 Arrival Date", value=str(final_arrival))
-        with m3:
-            st.metric(label="💰 Est. Cost", value=f"${cost:.2f}")
-        with m4:
-            st.metric(label="✈️ Distance", value=f"{real_distance} mi")
             
-        st.caption("Shipment Progress Probability")
-        st.progress(min(int(predicted_days)*10, 100))
-        
     else:
         st.error(prediction)
