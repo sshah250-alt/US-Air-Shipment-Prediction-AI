@@ -1,0 +1,259 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2822
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\froman\fcharset0 Times-Bold;\f1\froman\fcharset0 Times-Roman;\f2\froman\fcharset0 Times-Italic;
+\f3\fmodern\fcharset0 Courier-Oblique;\f4\fmodern\fcharset0 Courier;}
+{\colortbl;\red255\green255\blue255;\red0\green0\blue0;}
+{\*\expandedcolortbl;;\cssrgb\c0\c0\c0;}
+{\*\listtable{\list\listtemplateid1\listhybrid{\listlevel\levelnfc0\levelnfcn0\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{decimal\}}{\leveltext\leveltemplateid1\'01\'00;}{\levelnumbers\'01;}\fi-360\li720\lin720 }{\listname ;}\listid1}
+{\list\listtemplateid2\listhybrid{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{disc\}}{\leveltext\leveltemplateid101\'01\uc0\u8226 ;}{\levelnumbers;}\fi-360\li720\lin720 }{\listname ;}\listid2}
+{\list\listtemplateid3\listhybrid{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{disc\}}{\leveltext\leveltemplateid201\'01\uc0\u8226 ;}{\levelnumbers;}\fi-360\li720\lin720 }{\listname ;}\listid3}
+{\list\listtemplateid4\listhybrid{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{disc\}}{\leveltext\leveltemplateid301\'01\uc0\u8226 ;}{\levelnumbers;}\fi-360\li720\lin720 }{\listname ;}\listid4}
+{\list\listtemplateid5\listhybrid{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{disc\}}{\leveltext\leveltemplateid401\'01\uc0\u8226 ;}{\levelnumbers;}\fi-360\li720\lin720 }{\listname ;}\listid5}
+{\list\listtemplateid6\listhybrid{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{disc\}}{\leveltext\leveltemplateid501\'01\uc0\u8226 ;}{\levelnumbers;}\fi-360\li720\lin720 }{\listname ;}\listid6}}
+{\*\listoverridetable{\listoverride\listid1\listoverridecount0\ls1}{\listoverride\listid2\listoverridecount0\ls2}{\listoverride\listid3\listoverridecount0\ls3}{\listoverride\listid4\listoverridecount0\ls4}{\listoverride\listid5\listoverridecount0\ls5}{\listoverride\listid6\listoverridecount0\ls6}}
+\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\deftab720
+\pard\pardeftab720\sa321\partightenfactor0
+
+\f0\b\fs48 \cf0 \expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 \uc0\u9992 \u65039  US Shipment Transit Time Predictor\
+\pard\pardeftab720\sa240\partightenfactor0
+
+\fs24 \cf0 An intelligent logistics dashboard that leverages Machine Learning to predict shipment transit times between major US logistics hubs.
+\f1\b0 \
+\pard\pardeftab720\sa240\partightenfactor0
+
+\f2\i \cf0 (Note: Upload your screenshot 
+\f3\fs26 image_f0e911.jpg
+\f2\fs24  to an 
+\f3\fs26 assets
+\f2\fs24  folder in your repo)
+\f1\i0 \
+\pard\pardeftab720\sa298\partightenfactor0
+
+\f0\b\fs36 \cf0 \uc0\u55357 \u56534  Overview\
+\pard\pardeftab720\sa240\partightenfactor0
+
+\f1\b0\fs24 \cf0 This project is an end-to-end Machine Learning application designed to optimize logistics planning. It allows users to select origin/destination warehouses, shipment weight, and courier services to receive an instant 
+\f0\b Transit Time prediction
+\f1\b0 .\
+The application consists of:\
+\pard\tx220\tx720\pardeftab720\li720\fi-720\sa240\partightenfactor0
+\ls1\ilvl0
+\f0\b \cf0 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	1	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Frontend:
+\f1\b0  A high-performance Streamlit dashboard featuring 3D geospatial visualizations (PyDeck).\
+\ls1\ilvl0
+\f0\b \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	2	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Backend:
+\f1\b0  A Databricks Model Serving Endpoint that hosts the trained ML model.\
+\ls1\ilvl0
+\f0\b \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	3	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Model:
+\f1\b0  A robust regression pipeline trained on historical shipment data, tracked and managed via MLflow.\
+\pard\pardeftab720\sa298\partightenfactor0
+
+\f0\b\fs36 \cf0 \uc0\u10024  Key Features\
+\pard\tx220\tx720\pardeftab720\li720\fi-720\sa240\partightenfactor0
+\ls2\ilvl0
+\fs24 \cf0 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Real-Time Inference:
+\f1\b0  Connects directly to Databricks Model Serving for sub-second predictions.\
+\ls2\ilvl0
+\f0\b \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Interactive Geospatial Map:
+\f1\b0  Visualizes the flight path using a curved "Great Circle" arc with a moving airplane animation using 
+\f4\fs26 PyDeck
+\f1\fs24 .\
+\ls2\ilvl0
+\f0\b \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Dynamic UI:
+\f1\b0  Custom dark-mode interface with progress bars and clear metric displays.\
+\ls2\ilvl0
+\f0\b \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Cost Estimation:
+\f1\b0  Real-time calculation of shipping costs based on distance and weight formulas.\
+\pard\pardeftab720\sa298\partightenfactor0
+
+\f0\b\fs36 \cf0 \uc0\u55357 \u57056 \u65039  Tech Stack\
+\pard\tx220\tx720\pardeftab720\li720\fi-720\sa240\partightenfactor0
+\ls3\ilvl0
+\fs24 \cf0 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Language:
+\f1\b0  Python\
+\ls3\ilvl0
+\f0\b \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Frontend:
+\f1\b0  Streamlit, PyDeck (Deck.gl), CSS\
+\ls3\ilvl0
+\f0\b \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Machine Learning:
+\f1\b0  Scikit-Learn, XGBoost, MLflow\
+\ls3\ilvl0
+\f0\b \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Cloud & MLOps:
+\f1\b0  Databricks (Unified Analytics Platform), Databricks Model Serving\
+\pard\pardeftab720\sa298\partightenfactor0
+
+\f0\b\fs36 \cf0 \uc0\u55358 \u56800  Model Development\
+\pard\pardeftab720\sa240\partightenfactor0
+
+\f1\b0\fs24 \cf0 The core of this application is a Machine Learning pipeline developed in 
+\f0\b Databricks
+\f1\b0 .\
+\pard\pardeftab720\sa280\partightenfactor0
+
+\f0\b\fs28 \cf0 Experimentation\
+\pard\pardeftab720\sa240\partightenfactor0
+
+\f1\b0\fs24 \cf0 We utilized 
+\f0\b MLflow
+\f1\b0  to run an extensive hyperparameter search across 7 model families, generating over 100 unique model configurations:\
+\pard\tx220\tx720\pardeftab720\li720\fi-720\sa240\partightenfactor0
+\ls4\ilvl0
+\f0\b \cf0 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Linear Models:
+\f1\b0  OLS, Ridge, Lasso, ElasticNet\
+\ls4\ilvl0
+\f0\b \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Tree-Based:
+\f1\b0  Decision Trees, Random Forest, XGBoost, Gradient Boosting\
+\ls4\ilvl0
+\f0\b \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Others:
+\f1\b0  SVM (SVR), K-Nearest Neighbors (KNN), Neural Networks (MLP)\
+\pard\pardeftab720\sa280\partightenfactor0
+
+\f0\b\fs28 \cf0 \uc0\u55356 \u57286  The Champion Model\
+\pard\pardeftab720\sa240\partightenfactor0
+
+\f1\b0\fs24 \cf0 After rigorous evaluation based on 
+\f0\b RMSE (Root Mean Squared Error)
+\f1\b0 , the champion model selected was 
+\f0\b Lasso Regression
+\f1\b0 .\
+\pard\tx220\tx720\pardeftab720\li720\fi-720\sa240\partightenfactor0
+\ls5\ilvl0
+\f0\b \cf0 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Model:
+\f1\b0  
+\f4\fs26 sklearn.linear_model.Lasso
+\f1\fs24 \
+\ls5\ilvl0
+\f0\b \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Hyperparameter:
+\f1\b0  
+\f4\fs26 alpha=0.01
+\f1\fs24 \
+\ls5\ilvl0
+\f0\b \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Performance:
+\f1\b0  RMSE ~0.96 Days.\
+\ls5\ilvl0
+\f0\b \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Why it won:
+\f1\b0  The logistics data exhibited strong linear relationships (e.g., Distance vs. Time). While complex models like Neural Networks were tested, Lasso provided the best balance of accuracy and generalization by effectively filtering out noise through L1 regularization.\
+\pard\pardeftab720\sa240\partightenfactor0
+
+\f2\i \cf0 (Note: Upload your screenshot 
+\f3\fs26 image_3dff7f.jpg
+\f2\fs24  to an 
+\f3\fs26 assets
+\f2\fs24  folder in your repo)
+\f1\i0 \
+\pard\pardeftab720\sa298\partightenfactor0
+
+\f0\b\fs36 \cf0 \uc0\u55357 \u56960  How to Run Locally\
+\pard\pardeftab720\sa280\partightenfactor0
+
+\fs28 \cf0 1. Clone the Repository\
+\pard\pardeftab720\partightenfactor0
+
+\f4\b0\fs26 \cf0 git clone [https://github.com/your-username/us-shipment-predictor.git](https://github.com/your-username/us-shipment-predictor.git)\
+cd us-shipment-predictor\
+\pard\pardeftab720\sa280\partightenfactor0
+
+\f0\b\fs28 \cf0 2. Install Dependencies\
+\pard\pardeftab720\partightenfactor0
+
+\f4\b0\fs26 \cf0 pip install -r requirements.txt\
+\pard\pardeftab720\sa280\partightenfactor0
+
+\f0\b\fs28 \cf0 3. Set Environment Variables\
+\pard\pardeftab720\sa240\partightenfactor0
+
+\f1\b0\fs24 \cf0 The app requires connection credentials for the Databricks Serving Endpoint. Create a 
+\f4\fs26 .env
+\f1\fs24  file or export them in your terminal:\
+\pard\pardeftab720\partightenfactor0
+
+\f4\fs26 \cf0 export DATABRICKS_URL="https://<your-workspace>[.cloud.databricks.com/serving-endpoints/](https://.cloud.databricks.com/serving-endpoints/)<endpoint-name>/invocations"\
+export DATABRICKS_TOKEN="dapi..."\
+\pard\pardeftab720\sa280\partightenfactor0
+
+\f0\b\fs28 \cf0 4. Run the Streamlit App\
+\pard\pardeftab720\partightenfactor0
+
+\f4\b0\fs26 \cf0 streamlit run app.py\
+\pard\pardeftab720\sa298\partightenfactor0
+
+\f0\b\fs36 \cf0 \uc0\u55357 \u56514  Project Structure\
+\pard\pardeftab720\partightenfactor0
+
+\f4\b0\fs26 \cf0 \uc0\u9500 \u9472 \u9472  app.py                   # Main Streamlit application\
+\uc0\u9500 \u9472 \u9472  requirements.txt         # Python dependencies\
+\uc0\u9500 \u9472 \u9472  notebooks/\
+\uc0\u9474    \u9492 \u9472 \u9472  training_script.py   # Databricks ML training & grid search script\
+\uc0\u9500 \u9472 \u9472  assets/                  # Images and screenshots\
+\uc0\u9492 \u9472 \u9472  README.md                # Project documentation\
+\pard\pardeftab720\sa298\partightenfactor0
+
+\f0\b\fs36 \cf0 \uc0\u55357 \u56588  API Integration\
+\pard\pardeftab720\sa240\partightenfactor0
+
+\f1\b0\fs24 \cf0 The application sends a JSON payload to the Databricks Serving Endpoint with the following schema:\
+\pard\pardeftab720\partightenfactor0
+
+\f4\fs26 \cf0 \{\
+  "dataframe_split": \{\
+    "columns": [\
+      "Carrier", "Origin_Warehouse", "Destination", "Shipment_Month", \
+      "Distance_miles", "Weight_kg", "Cost", "Status", "Delivery_Date"\
+    ],\
+    "data": [[ "FedEx", "Warehouse_NYC", "Los Angeles", "December", 2445, 150, 319.5, "On Time", "2025-12-03" ]]\
+  \}\
+\}\
+\pard\pardeftab720\sa240\partightenfactor0
+
+\f2\i\fs24 \cf0 Note: The 
+\f3\fs26 Delivery_Date
+\f2\fs24  is required by the model signature but dropped during inference preprocessing.
+\f1\i0 \
+\pard\pardeftab720\sa298\partightenfactor0
+
+\f0\b\fs36 \cf0 \uc0\u55357 \u56622  Future Improvements\
+\pard\tx220\tx720\pardeftab720\li720\fi-720\sa240\partightenfactor0
+\ls6\ilvl0
+\fs24 \cf0 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Multi-Output Prediction:
+\f1\b0  Upgrade the model to predict both Transit Time and Shipping Cost simultaneously using 
+\f4\fs26 MultiOutputRegressor
+\f1\fs24 .\
+\ls6\ilvl0
+\f0\b \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Weather Integration:
+\f1\b0  Incorporate live weather API data to account for delays.\
+\ls6\ilvl0
+\f0\b \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Carrier Specifics:
+\f1\b0  Add more granular data for specific carrier service levels (e.g., "Overnight" vs "Ground").\
+\pard\pardeftab720\sa298\partightenfactor0
+
+\f0\b\fs36 \cf0 \uc0\u55357 \u56540  License\
+\pard\pardeftab720\sa240\partightenfactor0
+
+\f1\b0\fs24 \cf0 This project is licensed under the MIT License.\
+\pard\pardeftab720\sa240\partightenfactor0
+
+\f0\b \cf0 Created by Suman Shah
+\f1\b0 \
+}
